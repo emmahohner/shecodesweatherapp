@@ -18,6 +18,8 @@ function refreshWeather(response) {
   timeElement.innerHTML = formatDate(date);
   iconElement.innerHTML = `<img src="${response.data.condition.icon_url}"
               class="weather-app-icon"/>`;
+
+  getForecast(response.data.city);
 }
 
 function formatDate(date) {
@@ -57,30 +59,46 @@ function handleSearchSubmit(event) {
 let searchFormElement = document.querySelector("#search-form");
 searchFormElement.addEventListener("submit", handleSearchSubmit);
 
-function displayForecast() {
-  let forecastElement = document.querySelector("#forecast");
+function formatDay(timestamp) {
+  let date = new Date(timestamp * 1000);
+  let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  let days = ["Tue", "Wed", "Thur", "Fri", "Sat"];
+  return days[date.getDay()];
+}
+
+function getForecast(city) {
+  let apiKey = "5b5009d0d53133ocat3b7f4a40ffcef3";
+  let apiUrl = `https://api.shecodes.io/weather/v1/forecast?query=${city}&key=${apiKey}&units=metric`;
+  axios.get(apiUrl).then(displayForecast);
+}
+
+function displayForecast(response) {
   let forecastHtml = "";
 
-  days.forEach(function (day) {
-    forecastHtml =
-      forecastHtml +
-      `<div class="weather-forecast-day">
-    <div class="weather-forecast-date">${day} </div>
-    <div class="weather-forecast-icon">🌤️</div>
+  response.data.daily.forEach(function (day, index) {
+    if (index < 5) {
+      forecastHtml =
+        forecastHtml +
+        `<div class="weather-forecast-day">
+    <div class="weather-forecast-date">${formatDay(day.time)} </div>
+     <img src="${day.condition.icon_url}" class="weather-forecast-icon"/>
     <div class="weather-forecast-temperatures"> 
-    <div class="weather-forecast-temperature"> <strong>15°</strong>
+    <div class="weather-forecast-temperature"> <strong>${Math.round(
+      day.temperature.maximum
+    )}°</strong>
     </div>
-    <div class="weather-forecast-temperature">9°
+    <div class="weather-forecast-temperature">${Math.round(
+      day.temperature.minimum
+    )}°
 
     </div>
     </div>
   </div>`;
+    }
   });
 
+  let forecastElement = document.querySelector("#forecast");
   forecastElement.innerHTML = forecastHtml;
 }
 
 searchCity("Tallinn");
-displayForecast();
